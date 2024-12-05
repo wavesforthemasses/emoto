@@ -1,31 +1,39 @@
 <script lang="ts">
     export let title: string;
+    export let fullWidth = false;
 </script>
 
-<section class="dashboard-card">
-    <h2>{title}</h2>
+<div class="card {fullWidth ? 'full-width' : ''}">
+    {#if title}
+        <h3 class="card-title">{title}</h3>
+    {/if}
     <div class="card-content">
         <slot />
     </div>
-</section>
+</div>
 
 <style>
-    .dashboard-card {
-        background-color: var(--color-surface);
+    .card {
+        background: var(--color-surface);
+        padding: var(--spacing-lg);
         border-radius: var(--border-radius-lg);
-        padding: var(--spacing-6);
-        box-shadow: var(--shadow);
+        box-shadow: var(--shadow-md);
     }
 
-    h2 {
-        font-size: var(--font-size-xl);
-        margin-bottom: var(--spacing-4);
+    .full-width {
+        width: 100%;
+    }
+
+    .card-title {
+        font-size: var(--font-size-lg);
         color: var(--color-text);
+        margin-bottom: var(--spacing-md);
+        font-weight: 600;
     }
 
     .card-content {
         display: flex;
         flex-direction: column;
-        gap: var(--spacing-4);
+        gap: var(--spacing-md);
     }
 </style> 

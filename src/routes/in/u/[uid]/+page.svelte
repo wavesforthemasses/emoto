@@ -2,38 +2,47 @@
 <script lang="ts">
     import { page } from '$app/stores';
     import MoodSelector from '$lib/components/molecules/MoodSelector.svelte';
-    import NotificationOptIn from '$lib/components/molecules/NotificationOptIn.svelte';
-    import PWAInstall from '$lib/components/molecules/PWAInstall.svelte';
-    import { moodStore, type MoodEntry } from '$lib/stores/moodStore';
+    import Button from '$lib/components/atoms/Button.svelte';
+    import { moodStore } from '$lib/stores/moodStore';
+    import { formatDate } from '$lib/utils/dateUtils';
     import { onMount } from 'svelte';
-    import { getStorageItem } from '$lib/utils/storage';
-    import type { User } from '$lib/utils/types';
 
     const userId = $page.params.uid;
     let loading = true;
-    let user: User | null = null;
+    let user: { id: string; name: string } | null = null;
 
     // Make userMoods reactive to moodStore changes
-    $: userMoods = $moodStore.entries.filter(entry => entry.userId === userId);
+    $: userMoods = $moodStore.entries;
 
     onMount(() => {
-        // Load user data including company ID
-        const users = getStorageItem<User[]>('mood-tracker-users') || [];
-        user = users.find(u => u.id === userId) || null;
-        loading = false;
+        // Simulated user data loading
+        setTimeout(() => {
+            user = { id: userId, name: 'User' };
+            loading = false;
+        }, 500);
     });
 
-    function handleMoodSelect(event: CustomEvent<{ emoji: string; score: number }>) {
-        const { emoji, score } = event.detail;
-        // Additional handling if needed
+    function handleMoodSelect(event: CustomEvent<{ mood: string }>) {
+        showNoteInput = true;
+        selectedMood = event.detail.mood;
     }
 
-    // Calculate average mood score for the last 7 days
-    $: averageMoodScore = userMoods.length > 0
-        ? userMoods
-            .slice(-7)
-            .reduce((acc, curr) => acc + curr.score, 0) / Math.min(userMoods.length, 7)
-        : 0;
+    let showNoteInput = false;
+    let selectedMood: string | null = null;
+    let note = '';
+
+    function handleSubmit() {
+        if (!selectedMood) return;
+        
+        moodStore.addEntry({
+            mood: selectedMood as any,
+            note: note.trim() || undefined
+        });
+        
+        note = '';
+        showNoteInput = false;
+        selectedMood = null;
+    }
 </script>
 
 <svelte:head>
@@ -42,73 +51,64 @@
 </svelte:head>
 
 <main class="dashboard">
-    <header class="dashboard-header">
-        <h1>How are you feeling today?</h1>
-        {#if averageMoodScore > 0}
-            <p class="average-mood">
-                Your average mood for the last 7 days: 
-                <span class="score">{averageMoodScore.toFixed(1)}</span>
-            </p>
-        {/if}
-    </header>
+    <div class="hero">
+        <h1>Welcome Back{#if user?.name}, {user.name}{/if}!</h1>
+        <p>Track your mood and monitor your emotional well-being</p>
+    </div>
 
     <section class="mood-section" aria-live="polite">
         {#if loading}
-            <div class="loading">Loading...</div>
-        {:else if user}
+            <div class="loading">
+                <span class="loading-text">Loading...</span>
+            </div>
+        {:else}
             <MoodSelector
-                userId={userId}
-                companyId={user.companyId}
-                departmentId={user.departmentId}
+                selectedMood={selectedMood}
                 on:select={handleMoodSelect}
             />
+
+            {#if showNoteInput}
+                <div class="note-input fade-in">
+                    <label for="note">Add a note (optional)</label>
+                    <textarea
+                        id="note"
+                        bind:value={note}
+                        rows="3"
+                        placeholder="How are you feeling today?"
+                    ></textarea>
+                    <Button on:click={handleSubmit} fullWidth>Save Entry</Button>
+                </div>
+            {/if}
         {/if}
     </section>
 
     <section class="history-section">
         <h2>Your Mood History</h2>
         {#if userMoods.length === 0}
-            <p class="empty-state">No mood entries yet. Start tracking your mood above!</p>
+            <div class="empty-state">
+                <p>No mood entries yet. Start tracking your mood above!</p>
+            </div>
         {:else}
             <div class="mood-list">
-                {#each userMoods.slice().reverse() as mood}
+                {#each userMoods.slice().reverse() as entry}
                     <div class="mood-entry">
-                        <span class="mood-emoji">{mood.emoji}</span>
-                        <div class="mood-details">
-                            <time datetime={new Date(mood.timestamp).toISOString()}>
-                                {new Date(mood.timestamp).toLocaleString()}
+                        <div class="mood-header">
+                            <MoodSelector
+                                mood={entry.mood}
+                                size="sm"
+                                disabled
+                            />
+                            <time datetime={entry.timestamp}>
+                                {formatDate(entry.timestamp)}
                             </time>
-                            {#if mood.task}
-                                <p class="task-info">Current Task: {mood.task}</p>
-                            {/if}
-                            {#if mood.bestTask}
-                                <p class="task-info positive">Best Task: {mood.bestTask}</p>
-                            {/if}
-                            {#if mood.worstTask}
-                                <p class="task-info negative">Challenging Task: {mood.worstTask}</p>
-                            {/if}
                         </div>
+                        {#if entry.note}
+                            <p class="note">{entry.note}</p>
+                        {/if}
                     </div>
                 {/each}
             </div>
         {/if}
-    </section>
-
-    <section class="settings-section">
-        <h2>App Settings</h2>
-        <div class="settings-grid">
-            <div class="settings-card">
-                <h3>Push Notifications</h3>
-                <p class="settings-description">Get reminders to track your mood and stay updated.</p>
-                <NotificationOptIn />
-            </div>
-
-            <div class="settings-card">
-                <h3>Install App</h3>
-                <p class="settings-description">Install Mood Tracker for quick access and offline use.</p>
-                <PWAInstall />
-            </div>
-        </div>
     </section>
 </main>
 
@@ -116,142 +116,149 @@
     .dashboard {
         max-width: 800px;
         margin: 0 auto;
-        padding: var(--spacing-6);
+        padding: var(--spacing-xl) var(--spacing-md);
     }
 
-    .dashboard-header {
+    .hero {
         text-align: center;
-        margin-bottom: var(--spacing-8);
+        margin-bottom: var(--spacing-2xl);
+        background: var(--gradient-background);
+        padding: var(--spacing-xl);
+        border-radius: var(--border-radius-lg);
+        color: var(--color-surface);
     }
 
     h1 {
-        font-size: var(--font-size-2xl);
-        color: var(--color-text);
-        margin-bottom: var(--spacing-4);
+        font-size: var(--font-size-3xl);
+        margin-bottom: var(--spacing-md);
     }
 
-    .average-mood {
-        color: var(--color-text-light);
+    .hero p {
         font-size: var(--font-size-lg);
-    }
-
-    .score {
-        color: var(--color-primary);
-        font-weight: bold;
+        opacity: 0.9;
     }
 
     .mood-section {
-        margin-bottom: var(--spacing-8);
-    }
-
-    .history-section {
-        background-color: var(--color-surface);
-        padding: var(--spacing-6);
-        border-radius: var(--border-radius-lg);
-        box-shadow: var(--shadow);
-    }
-
-    h2 {
-        font-size: var(--font-size-xl);
-        margin-bottom: var(--spacing-4);
-    }
-
-    .empty-state {
-        text-align: center;
-        color: var(--color-text-light);
-        padding: var(--spacing-4);
-    }
-
-    .mood-list {
-        display: grid;
-        gap: var(--spacing-4);
-        max-height: 400px;
-        overflow-y: auto;
-    }
-
-    .mood-entry {
-        display: flex;
-        align-items: center;
-        gap: var(--spacing-4);
-        padding: var(--spacing-3);
-        background-color: var(--color-background);
-        border-radius: var(--border-radius);
-        box-shadow: var(--shadow-sm);
-    }
-
-    .mood-emoji {
-        font-size: var(--font-size-xl);
-    }
-
-    .mood-details {
-        flex-grow: 1;
-    }
-
-    time {
-        color: var(--color-text-light);
-        font-size: var(--font-size-sm);
-    }
-
-    .task-info {
-        margin: var(--spacing-1) 0;
-        font-size: var(--font-size-sm);
-        color: var(--color-text-light);
-    }
-
-    .task-info.positive {
-        color: var(--color-success);
-    }
-
-    .task-info.negative {
-        color: var(--color-warning);
+        max-width: 500px;
+        margin: 0 auto var(--spacing-2xl);
     }
 
     .loading {
         text-align: center;
-        color: var(--color-text-light);
-        padding: var(--spacing-8);
+        padding: var(--spacing-xl);
     }
 
-    .settings-section {
-        margin-top: var(--spacing-8);
-    }
-
-    .settings-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: var(--spacing-4);
-    }
-
-    .settings-card {
-        background-color: var(--color-surface);
-        padding: var(--spacing-4);
-        border-radius: var(--border-radius-lg);
-        box-shadow: var(--shadow);
-    }
-
-    .settings-card h3 {
+    .loading-text {
+        color: var(--color-text-secondary);
         font-size: var(--font-size-lg);
-        margin-bottom: var(--spacing-2);
-        color: var(--color-text);
     }
 
-    .settings-description {
-        color: var(--color-text-light);
+    .note-input {
+        margin-top: var(--spacing-xl);
+        background: var(--color-surface);
+        padding: var(--spacing-lg);
+        border-radius: var(--border-radius-lg);
+        box-shadow: var(--shadow-md);
+    }
+
+    label {
+        display: block;
+        margin-bottom: var(--spacing-sm);
+        color: var(--color-text);
         font-size: var(--font-size-sm);
-        margin-bottom: var(--spacing-4);
+    }
+
+    textarea {
+        width: 100%;
+        padding: var(--spacing-sm);
+        border: 1px solid var(--color-text-secondary);
+        border-radius: var(--border-radius-md);
+        margin-bottom: var(--spacing-md);
+        font-family: inherit;
+        resize: vertical;
+    }
+
+    textarea:focus {
+        outline: none;
+        border-color: var(--color-primary);
+    }
+
+    .history-section {
+        background: var(--color-surface);
+        padding: var(--spacing-xl);
+        border-radius: var(--border-radius-lg);
+        box-shadow: var(--shadow-md);
+    }
+
+    h2 {
+        font-size: var(--font-size-2xl);
+        color: var(--color-text);
+        margin-bottom: var(--spacing-xl);
+        text-align: center;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: var(--spacing-xl);
+        color: var(--color-text-secondary);
+    }
+
+    .mood-list {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-md);
+        max-height: 500px;
+        overflow-y: auto;
+        padding: var(--spacing-md);
+    }
+
+    .mood-entry {
+        background: var(--color-background);
+        padding: var(--spacing-lg);
+        border-radius: var(--border-radius-md);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .mood-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: var(--spacing-sm);
+    }
+
+    time {
+        color: var(--color-text-secondary);
+        font-size: var(--font-size-sm);
+    }
+
+    .note {
+        color: var(--color-text);
+        font-size: var(--font-size-base);
+        margin-top: var(--spacing-sm);
+        padding-top: var(--spacing-sm);
+        border-top: 1px solid var(--color-text-secondary);
     }
 
     @media (max-width: 640px) {
         .dashboard {
-            padding: var(--spacing-4);
+            padding: var(--spacing-md);
+        }
+
+        .hero {
+            margin: var(--spacing-md);
+            padding: var(--spacing-lg);
+        }
+
+        h1 {
+            font-size: var(--font-size-2xl);
+        }
+
+        .hero p {
+            font-size: var(--font-size-base);
         }
 
         .mood-list {
-            max-height: 300px;
-        }
-
-        .settings-grid {
-            grid-template-columns: 1fr;
+            max-height: 400px;
         }
     }
 </style> 

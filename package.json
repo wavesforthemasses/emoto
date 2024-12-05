@@ -8,7 +8,7 @@
 		"preview": "vite preview",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-		"push": "git pull && git add . && git commit -m 'update' && git push -u origin main",
+		"push": "git add . && git commit -m 'update' && git push -u origin main",
 		"pull": "git pull"
 	},
 	"devDependencies": {

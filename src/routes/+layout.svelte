@@ -1,107 +1,114 @@
-<!-- Root Layout -->
+<!-- App layout component -->
 <script lang="ts">
-    import '../app.css';
+  import '../app.css';
+  import { onMount } from 'svelte';
+  
+  let isDarkMode = false;
+  
+  onMount(() => {
+    // Check system preference
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const storedTheme = localStorage.getItem('theme');
+    
+    isDarkMode = storedTheme === 'dark' || (!storedTheme && prefersDark);
+    document.documentElement.classList.toggle('dark', isDarkMode);
+  });
+
+  function toggleTheme() {
+    isDarkMode = !isDarkMode;
+    document.documentElement.classList.toggle('dark', isDarkMode);
+    localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+  }
 </script>
 
 <div class="app">
-    <nav class="main-nav">
-        <div class="container nav-content">
-            <a href="/" class="logo">
-                Mood Tracker
-            </a>
-            <div class="nav-links">
-                <a href="/in/u/demo" class="nav-link">Dashboard</a>
-                <a href="/in/c/demo" class="nav-link">Company</a>
-                <a href="/in/a" class="nav-link">Admin</a>
-            </div>
-        </div>
+  <header>
+    <nav>
+      <div class="logo">
+        <a href="/">Mood Tracker</a>
+      </div>
+      <button class="theme-toggle" on:click={toggleTheme} aria-label="Toggle theme">
+        {#if isDarkMode}
+          🌞
+        {:else}
+          🌙
+        {/if}
+      </button>
     </nav>
+  </header>
 
-    <main class="main-content">
-        <slot />
-    </main>
+  <div class="content">
+    <slot />
+  </div>
 
-    <footer class="main-footer">
-        <div class="container">
-            <p>&copy; {new Date().getFullYear()} Mood Tracker. All rights reserved.</p>
-        </div>
-    </footer>
+  <footer>
+    <p>Made with ❤️ for better mental health</p>
+  </footer>
 </div>
 
 <style>
-    .app {
-        display: flex;
-        flex-direction: column;
-        min-height: 100vh;
-    }
+  .app {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
 
-    .main-nav {
-        background-color: var(--color-background);
-        box-shadow: var(--shadow);
-        position: sticky;
-        top: 0;
-        z-index: 100;
-    }
+  header {
+    background: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
 
-    .nav-content {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        height: 4rem;
-    }
+  nav {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: var(--spacing-md) var(--spacing-lg);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
 
-    .logo {
-        font-size: var(--font-size-xl);
-        font-weight: bold;
-        color: var(--color-primary);
-        text-decoration: none;
-        transition: color var(--transition);
-    }
+  .logo a {
+    font-size: var(--font-size-xl);
+    font-weight: 600;
+    color: var(--color-text);
+    text-decoration: none;
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
 
-    .logo:hover {
-        color: var(--color-primary-dark);
-    }
+  .theme-toggle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: var(--font-size-xl);
+    padding: var(--spacing-xs);
+    border-radius: var(--border-radius-full);
+    transition: transform var(--transition-fast);
+  }
 
-    .nav-links {
-        display: flex;
-        gap: var(--spacing-4);
-    }
+  .theme-toggle:hover {
+    transform: scale(1.1);
+  }
 
-    .nav-link {
-        color: var(--color-text);
-        text-decoration: none;
-        padding: var(--spacing-2) var(--spacing-4);
-        border-radius: var(--border-radius);
-        transition: background-color var(--transition);
-    }
+  .content {
+    flex: 1;
+    width: 100%;
+  }
 
-    .nav-link:hover {
-        background-color: var(--color-surface);
-    }
+  footer {
+    background: var(--color-surface);
+    padding: var(--spacing-lg);
+    text-align: center;
+    color: var(--color-text-secondary);
+  }
 
-    .main-content {
-        flex: 1;
-        background-color: var(--color-background);
+  @media (max-width: 640px) {
+    nav {
+      padding: var(--spacing-md);
     }
-
-    .main-footer {
-        background-color: var(--color-surface);
-        padding: var(--spacing-4) 0;
-        text-align: center;
-        color: var(--color-text-light);
-    }
-
-    @media (max-width: 640px) {
-        .nav-content {
-            flex-direction: column;
-            height: auto;
-            padding: var(--spacing-4) 0;
-            gap: var(--spacing-4);
-        }
-
-        .nav-links {
-            width: 100%;
-            justify-content: center;
-        }
-    }
+  }
 </style> 
