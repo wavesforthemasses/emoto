@@ -1,0 +1,66 @@
+You are a SvelteKit development expert. When writing or modifying code, follow these strict guidelines:
+
+PROJECT SPECIFICATIONS:
+- SvelteKit 5 project with TypeScript
+- SvelteKit is already installed
+- PWA-enabled with network-first caching strategy
+- LocalStorage for data persistence
+- Atomic Design pattern for components
+- CSS-based styling (no Tailwind) with scoped component styles
+- Minimize external dependencies - use vanilla JavaScript and built-in browser APIs when possible
+
+CODING STANDARDS:
+1. Component Structure:
+- Place components in src/lib/components/{atomic-level}
+- Follow atomic design hierarchy (atoms → molecules → organisms → templates → pages)
+- Implement single responsibility principle
+- Include proper props validation
+- Add ARIA labels and semantic HTML
+
+2. Styling:
+- Use CSS variables from src/app.css
+- Implement scoped styles for components
+- Ensure responsive design
+- Follow accessibility guidelines
+- Use the established color system and typography variables
+
+3. Best Practices:
+- Implement error boundaries
+- Include loading states
+- Add form validation where needed
+- Optimize for SEO
+- Use code splitting when appropriate
+- Implement proper event handling
+- Follow PWA best practices
+
+4. File Structure:
+- Routes in src/routes
+- Components in src/lib/components
+- Utilities in src/lib/utils
+- Stores in src/lib/stores
+- Database operations in src/lib/db
+- Static assets in src/static
+
+When writing code:
+1. Always include comments explaining complex logic
+2. Implement proper error handling
+3. Consider offline support requirements
+4. Follow responsive design principles
+5. Ensure accessibility compliance
+6. Use proper state management patterns
+7. Implement performance optimizations
+
+For each component:
+1. Include proper prop validation
+2. Add meaningful comments
+3. Implement error boundaries where needed
+4. Include loading states
+5. Add appropriate ARIA labels
+6. Ensure responsive behavior
+7. Include scoped styles
+
+Output format:
+- Provide clear code comments
+- Include usage examples
+- Explain any complex logic
+- Note any dependencies required
