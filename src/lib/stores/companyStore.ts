@@ -26,7 +26,6 @@ export interface Task {
     companyId: string;
     title: string;
     description?: string;
-    departmentIds: string[];
 }
 
 export interface CompanyStore {
@@ -177,6 +176,55 @@ function createCompanyStore() {
                 const newStore = {
                     ...store,
                     tasks: store.tasks.filter(t => t.id !== id)
+                };
+                if (browser) {
+                    localStorage.setItem('company-data', JSON.stringify(newStore));
+                }
+                return newStore;
+            });
+        },
+        updateTask: (taskData: Task) => {
+            update(store => {
+                const newStore = {
+                    ...store,
+                    tasks: store.tasks.map(task =>
+                        task.id === taskData.id ? taskData : task
+                    )
+                };
+                if (browser) {
+                    localStorage.setItem('company-data', JSON.stringify(newStore));
+                }
+                return newStore;
+            });
+        },
+        updateUser: (userData: User) => {
+            update(store => {
+                const newStore = {
+                    ...store,
+                    users: store.users.map(user =>
+                        user.id === userData.id ? userData : user
+                    )
+                };
+                if (browser) {
+                    localStorage.setItem('company-data', JSON.stringify(newStore));
+                }
+                return newStore;
+            });
+        },
+        updateDepartment: (companyId: string, departmentData: Department) => {
+            update(store => {
+                const newStore = {
+                    ...store,
+                    companies: store.companies.map(company =>
+                        company.id === companyId
+                            ? {
+                                ...company,
+                                departments: company.departments.map(dept =>
+                                    dept.id === departmentData.id ? departmentData : dept
+                                )
+                            }
+                            : company
+                    )
                 };
                 if (browser) {
                     localStorage.setItem('company-data', JSON.stringify(newStore));

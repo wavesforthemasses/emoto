@@ -4,6 +4,7 @@ interface MoodEntry {
   mood: 'great' | 'good' | 'okay' | 'bad' | 'terrible';
   timestamp: string;
   note?: string;
+  tasks?: string[];
 }
 
 interface MoodStore {

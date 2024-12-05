@@ -2,14 +2,21 @@
 <script lang="ts">
     import { page } from '$app/stores';
     import MoodSelector from '$lib/components/molecules/MoodSelector.svelte';
+    import MoodIcon from '$lib/components/atoms/MoodIcon.svelte';
     import Button from '$lib/components/atoms/Button.svelte';
     import { moodStore } from '$lib/stores/moodStore';
+    import { companyStore } from '$lib/stores/companyStore';
     import { formatDate } from '$lib/utils/dateUtils';
     import { onMount } from 'svelte';
+    import TaskSelector from '$lib/components/molecules/TaskSelector.svelte';
 
     const userId = $page.params.uid;
     let loading = true;
     let user: { id: string; name: string } | null = null;
+    
+    // Get user's company ID from the store
+    $: currentUser = $companyStore.users.find(u => u.id === userId);
+    $: companyId = currentUser?.companyId;
 
     // Make userMoods reactive to moodStore changes
     $: userMoods = $moodStore.entries;
@@ -31,17 +38,25 @@
     let selectedMood: string | null = null;
     let note = '';
 
+    let selectedTaskIds: string[] = [];
+
+    function handleTaskSelect(event: CustomEvent<{ taskIds: string[] }>) {
+        selectedTaskIds = event.detail.taskIds;
+    }
+
     function handleSubmit() {
         if (!selectedMood) return;
         
         moodStore.addEntry({
             mood: selectedMood as any,
-            note: note.trim() || undefined
+            note: note.trim() || undefined,
+            tasks: selectedTaskIds
         });
         
         note = '';
         showNoteInput = false;
         selectedMood = null;
+        selectedTaskIds = [];
     }
 </script>
 
@@ -68,6 +83,16 @@
             />
 
             {#if showNoteInput}
+                <div class="task-input">
+                    <h3>Select one or more tasks (optional)</h3>
+                    {#if companyId}
+                        <TaskSelector
+                            {companyId}
+                            bind:selectedTasks={selectedTaskIds}
+                            on:select={handleTaskSelect}
+                        />
+                    {/if}
+                </div>
                 <div class="note-input fade-in">
                     <label for="note">Add a note (optional)</label>
                     <textarea
@@ -93,15 +118,22 @@
                 {#each userMoods.slice().reverse() as entry}
                     <div class="mood-entry">
                         <div class="mood-header">
-                            <MoodSelector
+                            <MoodIcon
                                 mood={entry.mood}
-                                size="sm"
-                                disabled
                             />
                             <time datetime={entry.timestamp}>
                                 {formatDate(entry.timestamp)}
                             </time>
                         </div>
+                        {#if entry?.tasks?.length > 0}
+                            <div class="task-list">
+                                {#each $companyStore.tasks.filter(
+                                    (task: Task) => entry.tasks.includes(task.id)
+                                ) as task}
+                                    <span class="task-tag">{task.title}</span>
+                                {/each}
+                            </div>
+                        {/if}
                         {#if entry.note}
                             <p class="note">{entry.note}</p>
                         {/if}
@@ -260,5 +292,18 @@
         .mood-list {
             max-height: 400px;
         }
+    }
+
+    .task-tag {
+        background: var(--color-primary);
+        color: var(--color-surface);
+        padding: var(--spacing-xs) var(--spacing-sm);
+        border-radius: var(--border-radius-lg);
+        font-size: var(--font-size-xs);
+    }
+    .task-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--spacing-xs);
     }
 </style> 
