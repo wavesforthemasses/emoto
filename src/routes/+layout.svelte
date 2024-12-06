@@ -1,6 +1,7 @@
 <!-- App layout component -->
 <script lang="ts">
   import '../app.css';
+  import 'remixicon/fonts/remixicon.css';
   import { onMount } from 'svelte';
   
   let isDarkMode = false;

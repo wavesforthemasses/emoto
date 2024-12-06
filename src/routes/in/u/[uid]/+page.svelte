@@ -50,7 +50,9 @@
         moodStore.addEntry({
             mood: selectedMood as any,
             note: note.trim() || undefined,
-            tasks: selectedTaskIds
+            tasks: selectedTaskIds,
+            userId: userId,
+            companyId: companyId
         });
         
         note = '';

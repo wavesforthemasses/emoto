@@ -5,6 +5,9 @@ interface MoodEntry {
   timestamp: string;
   note?: string;
   tasks?: string[];
+  id: string;
+  userId: string;
+  companyId: string;
 }
 
 interface MoodStore {
@@ -26,10 +29,12 @@ const createMoodStore = () => {
   return {
     subscribe,
     addEntry: (entry: Omit<MoodEntry, 'timestamp'>) => {
+      const myid = crypto.randomUUID();
       update(store => {
         const newEntry = {
           ...entry,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
+          id: myid
         };
         const newStore = {
           entries: [...store.entries, newEntry]

@@ -4,6 +4,7 @@
     import { companyStore } from '$lib/stores/companyStore';
     import type { Company, User, Task } from '$lib/stores/companyStore';
     import CompanyManager from '$lib/components/organisms/CompanyManager.svelte';
+    import CompanyStats from '$lib/components/organisms/CompanyStats.svelte';
     import DashboardCard from '$lib/components/molecules/DashboardCard.svelte';
     import { onMount } from 'svelte';
 
@@ -52,21 +53,21 @@
     {:else}
         <section class="overview-section">
             <div class="stats-grid">
-                <DashboardCard title="Users">
+                <DashboardCard title="Users" icon="ri-user-line">
                     <div class="stat">
                         <span class="stat-value">{companyUsers.length}</span>
                         <span class="stat-label">Total Users</span>
                     </div>
                 </DashboardCard>
 
-                <DashboardCard title="Departments">
+                <DashboardCard title="Departments" icon="ri-building-line">
                     <div class="stat">
                         <span class="stat-value">{company.departments.length}</span>
                         <span class="stat-label">Total Departments</span>
                     </div>
                 </DashboardCard>
 
-                <DashboardCard title="Tasks">
+                <DashboardCard title="Tasks" icon="ri-task-line">
                     <div class="stat">
                         <span class="stat-value">{companyTasks.length}</span>
                         <span class="stat-label">Active Tasks</span>
@@ -77,6 +78,10 @@
 
         <section class="management-section">
             <CompanyManager {companyId} />
+        </section>
+
+        <section class="stats-section">
+            <CompanyStats {companyId} />
         </section>
     {/if}
 </main>
@@ -168,6 +173,13 @@
         box-shadow: var(--shadow-md);
     }
 
+    .stats-section {
+        background: var(--color-surface);
+        padding: var(--spacing-xl);
+        border-radius: var(--border-radius-lg);
+        box-shadow: var(--shadow-md);
+    }
+
     @media (max-width: 640px) {
         .dashboard {
             padding: var(--spacing-md);
@@ -191,6 +203,10 @@
         }
 
         .management-section {
+            padding: var(--spacing-md);
+        }
+
+        .stats-section {
             padding: var(--spacing-md);
         }
     }
